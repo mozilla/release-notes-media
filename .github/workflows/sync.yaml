@@ -1,0 +1,37 @@
+name: Sync to Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  MEDIA_BASE_PATH: media/img/firefox/releasenotes/note-images/
+  BUCKET_NAME: bedrock-prod-prod-media
+  CACHE_HEADER: "public, max-age=86400"
+
+jobs:
+  deploy-gcp:
+    name: Sync Assets to GCP
+    environment: website
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout mozilla/release-notes-media
+        uses: actions/checkout@v3
+      - name: Authenticate with GCP
+        uses: google-github-actions/auth@v0
+        with:
+          token_format: access_token
+          service_account: artifact-writer@${{ secrets.GCP_PROJECT_NAME }}.iam.gserviceaccount.com
+          workload_identity_provider: projects/${{ secrets.WIP_PROJECT_ID }}/locations/global/workloadIdentityPools/github-actions/providers/github-actions
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v1
+      - name: Rsync Media
+        run: |-
+          gsutil -m -h "Cache-Control:$CACHE_HEADER" rsync -d -r -x '\.git' media/ gs://$BUCKET_NAME/$MEDIA_BASE_PATH
