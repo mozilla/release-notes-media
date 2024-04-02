@@ -23,15 +23,15 @@ jobs:
 
     steps:
       - name: Checkout mozilla/release-notes-media
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Authenticate with GCP
-        uses: google-github-actions/auth@v0
+        uses: google-github-actions/auth@v2
         with:
           token_format: access_token
           service_account: deploy-release-notes-prod@${{ secrets.GCP_PROJECT_NAME }}.iam.gserviceaccount.com
           workload_identity_provider: projects/${{ secrets.WIP_PROJECT_ID }}/locations/global/workloadIdentityPools/github-actions/providers/github-actions
       - name: Setup gcloud
-        uses: google-github-actions/setup-gcloud@v1
+        uses: google-github-actions/setup-gcloud@v2
       - name: Rsync Media
         run: |-
           gsutil -m -h "Cache-Control:$CACHE_HEADER" rsync -d -r -x '\.git' media/ gs://$BUCKET_NAME/$MEDIA_BASE_PATH
