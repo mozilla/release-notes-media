@@ -1,4 +1,4 @@
-name: Sync to Production
+name: Sync to Springfield Production
 
 on:
   push:
@@ -8,14 +8,14 @@ on:
 
 env:
   MEDIA_BASE_PATH: media/img/firefox/releasenotes/note-images/
-  BUCKET_NAME: bedrock-prod-prod-media
+  BUCKET_NAME: springfield-prod-prod-media
   CACHE_HEADER: "public, max-age=86400"
 
 jobs:
   deploy-gcp:
     name: Sync Assets to GCP
     environment: website
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
 
     permissions:
       contents: read
@@ -23,15 +23,15 @@ jobs:
 
     steps:
       - name: Checkout mozilla/release-notes-media
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v.6.0.2
       - name: Authenticate with GCP
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
         with:
           token_format: access_token
           service_account: deploy-release-notes-prod@${{ secrets.GCP_PROJECT_NAME }}.iam.gserviceaccount.com
           workload_identity_provider: projects/${{ secrets.WIP_PROJECT_ID }}/locations/global/workloadIdentityPools/github-actions/providers/github-actions
       - name: Setup gcloud
-        uses: google-github-actions/setup-gcloud@v2
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
       - name: Rsync Media
         run: |-
           gsutil -m -h "Cache-Control:$CACHE_HEADER" rsync -d -r -x '\.git' media/ gs://$BUCKET_NAME/$MEDIA_BASE_PATH
